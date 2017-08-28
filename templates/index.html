@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <!-- <title>{%block title%}{%endblock%}</title> -->
+    <link rel="stylesheet" href="{{url_for('static',filename = 'css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename = 'css/styles.css')}}">
+    <!-- {%block import%}{%endblock%} -->
+</head>
+
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="padding-top-15 navbar-brand " href="/">Item Catalog !!</a>
+            </div>
+            {% if isLoggedIn %}
+            <div class="pull-right padding-top-15">
+                <a href="{{url_for('gdisconnect')}}" class="sign-in-font">Log Out</a>
+            </div>
+            {% else %}
+            <div class="pull-right padding-top-15">
+                <a href="{{url_for('showLogin')}}" class="sign-in-font">Log In</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Main Page Content -->
+    <!--  {%block header%}{%endblock%}
+                {%block contents%}{%endblock%} -->
+    <section id="catalog" class="section">
+        <div class="container">
+            {% if isLoggedIn %} {% if show_welcome != 'true' %}
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="col-md-8 margin-top-12">
+                        <h2>Welcome {{user_name}} !!</h2>
+                    </div>
+                    {% if user_image %}
+                    <div class="col-md-4 ">
+                        <img src="{{user_image}}" class="pull-right style-userimage img-circle img-responsive">
+                    </div>
+                    {% endif %}
+                    <!-- /.row -->
+                </div>
+            </div>
+            {% endif %} {% endif %}
+            <div class="panel panel-default col-md-12">
+             
+                <div class="panel-body custom-data-height ">
+                    {% block content %} {% endblock %}
+                    <!-- /.row -->
+                </div>
+            </div>
+            
+            {% if get_flashed_messages() %}
+                <div class="panel-heading">
+                    {% with messages = get_flashed_messages() %} 
+                        {% if messages %} 
+                            {% for message in messages %} 
+                                {{ message }} 
+                            {% endfor %} 
+                        {% endif %} 
+                    {% endwith %}
+                </div>
+                {% endif %}
+        </div>
+        <!-- /.container -->
+    </section>
+</body>
+<!-- {%block javascript%}{%endblock%} -->
+
+</html>

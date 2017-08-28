@@ -1,0 +1,25 @@
+{% extends "index.html" %} 
+
+{% block content %}
+
+                    <div class=" col-md-4">
+<!-- Page Content -->
+<h4>Categories</h4>
+<hr> {% for i in categories %}
+<div class="main_heading">
+    <a href="{{url_for('showCategory', catagory_name = i.name)}}">
+        <h4>{{ i.name }}</h4>
+    </a>
+</div>
+{% endfor %}
+</div>
+
+
+<div class="col-md-4">
+                        {% block items %} {% endblock %}
+
+</div>
+<!-- /.container -->
+<!-- /.section -->
+{% endblock %}
+

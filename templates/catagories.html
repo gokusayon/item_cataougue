@@ -1,0 +1,50 @@
+{% extends "index.html" %} 
+{% block content %}
+<div class=" col-md-6 padding-left-20 vertical-rule-right">
+    <!-- Page Content -->
+</div>
+<div class="col-md-6 padding-right-20 pull-right">
+</div>
+<!-- /.container -->
+<!-- /.section -->
+<style type="text/css">
+</style>
+<div class="Container">
+    <div class="Content row">
+        <div class="Wrapper">
+            <div class="LeftContent col-md-6" id="scroll-style">
+                <div class="row scroll-style">
+                    <span class="col-md-8"><h4>Categories</h4></span> {% if isLoggedIn %}
+                    <span class="col-md-4">
+                        <a href="{{url_for('addCatagory')}}" class="pull-right">
+                            Add Catagory
+                        </a>
+                    </span> {% endif %}
+                </div>
+                <hr> {% for i in categories %}
+                <div class="main_heading">
+                    <a href="{{url_for('showCategory', catagory_name = i.name)}}">
+                        <div class="row">
+                            <span class="col-md-8"><h4>{{ i.name }}</h4></span> {% if isLoggedIn %}
+                            <div class="col-md-4 margin-top-7">
+                                <a href="{{url_for('removeCategory',catagory_name = i.name)}}" class="pull-right">
+                        Remove
+                    </a>
+                                <a href="{{url_for('editCategory',catagory_name = i.name)}}" class="pull-right padding-right-10">
+                        Edit
+                    </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="RightContent col-md-5">
+                
+                {% block items %} {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

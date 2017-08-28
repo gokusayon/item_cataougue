@@ -1,0 +1,37 @@
+{% extends "index.html" %} {% block content %}
+<div class=" col-md-12">
+    <!-- Page Content -->
+    <div class="row">
+        <span class="col-md-12"><h4>Add New Item</h4></span>
+    </div>
+    <hr>
+
+
+        <form action="{{url_for('addItem',catagory_name=catagory_name)}}" method = "post" class="padding-top-10">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type ="text" class="form-control" id="name" maxlength="250" name="name">
+            </div>
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <textarea name="description" id="description" class="form-control" maxlength="250" cols="30" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="current-picture">Picture:</label>
+            </div>
+            <div class="form-group">
+                <label for="picture">Picture URL:</label>
+                <input type ="url" class="form-control" id="picture" maxlength="250" name="picture">
+            </div>
+            <div class="form-group">
+                <button type="submit" id="submit" class="btn btn-primary">Save</button>
+                <a href="{{url_for('showCategory', catagory_name=catagory_name)}}">
+                    <button type="button" class="btn btn-danger">Cancel</button>
+                </a>
+            </div>
+        </form>
+    <hr>
+</div>
+<!-- /.container -->
+<!-- /.section -->
+{% endblock %}
