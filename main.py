@@ -1,6 +1,6 @@
-from flask import Flask, render_template, jsonify, request, flash, redirect, url_for
-from entityManagerService import EntityManagerService, CatagoryService, ItemService, UserService
-from database_set_up import User,Item,Catagory
+from flask import Flask, render_template, jsonify, request, flash, redirect, url_for, make_response
+from database.entityManagerService import EntityManagerService, CatagoryService, ItemService, UserService
+from database.database_set_up import User,Item,Catagory
 
 from flask import session as login_session
 import random
@@ -12,7 +12,6 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
 import json
-from flask import make_response
 import requests
 
 app = Flask(__name__)
@@ -164,7 +163,7 @@ def gdisconnect():
         response = make_response(json.dumps(
             'Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
-        return showCatalog()
+        return redirect(url_for('showCatalog'))
     else:
         response = make_response(json.dumps(
             'Failed to revoke token for given user.', 400))
@@ -207,6 +206,7 @@ def showCategory(catagory_name):
 
 @app.route('/catalog/<path:catagory_name>/<path:item_id>/')
 def showItem(catagory_name, item_id):
+    print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" + item_id)
     item = itemService.getItemById(item_id)
     print(item.description)
     return render_template('item.html', catagory_name=catagory_name, item=item, show_item="true")
@@ -293,15 +293,14 @@ def removeCategory(catagory_name):
 # @login_required
 def addItem(catagory_name):
     if request.method == 'POST' and isLoggedIn():
-        print("Inside First condition")
         catagory = catagoryService.getCatagoryByName(catagory_name)
         user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-        
         item = Item(name= request.form['name'],
-               description= request.form['name'],
-               image_url= request.form['name'],
+               description= request.form['description'],
+               image_url= request.form['image_url'],
                catagory_id=catagory.id,
                user_id=user.id)
+        print("Saving Item")
 
         eMS.save(item)
         flash('Category Item Successfully Created!')
@@ -334,12 +333,14 @@ def editItem(catagory_name, item_name):
             return redirect(url_for('showCatalog'))
 
         # if request.form['name']:
-            item.name = request.form['name']
-            item.description = request.form['description']
-            item.picture = request.form['picture']
-            eMS.save(item)
-            flash('Category Item Successfully Edited!')
-            return redirect(url_for('showCatalog'))
+        print("-----------------Editing item----------------------------------")
+        item.name = request.form['name']
+        item.description = request.form['description']
+        item.image_url = request.form['image_url']
+        eMS.save(item)
+        flash('Category Item Successfully Edited!')
+
+        return redirect(url_for('showCatalog'))
 
     return render_template('edititem.html',
                            catagory_name=catagory_name,item=item)

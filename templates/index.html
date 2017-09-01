@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <!-- <title>{%block title%}{%endblock%}</title> -->
+    <title>{%block title%}{%endblock%}</title>
     <link rel="stylesheet" href="{{url_for('static',filename = 'css/bootstrap.min.css')}}">
     <link rel="stylesheet" href="{{url_for('static',filename = 'css/styles.css')}}">
     <!-- {%block import%}{%endblock%} -->
@@ -48,24 +48,16 @@
             </div>
             {% endif %} {% endif %}
             <div class="panel panel-default col-md-12">
-             
                 <div class="panel-body custom-data-height ">
                     {% block content %} {% endblock %}
                     <!-- /.row -->
                 </div>
             </div>
-            
             {% if get_flashed_messages() %}
-                <div class="panel-heading">
-                    {% with messages = get_flashed_messages() %} 
-                        {% if messages %} 
-                            {% for message in messages %} 
-                                {{ message }} 
-                            {% endfor %} 
-                        {% endif %} 
-                    {% endwith %}
-                </div>
-                {% endif %}
+            <div class="panel-heading">
+                {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %} {{ message }} {% endfor %} {% endif %} {% endwith %}
+            </div>
+            {% endif %}
         </div>
         <!-- /.container -->
     </section>

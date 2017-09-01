@@ -6,8 +6,8 @@ from database_set_up import Base, Catagory, Item, User
 
 import logging
 
-logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+# logging.basicConfig()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 engine = \
     create_engine('mysql+pymysql://root:root@localhost/item_catalog')
@@ -98,6 +98,7 @@ class EntityManagerService:
         return session.query(User).filter_by(id=user_id).one()
 
     def save(self, new_or_updated_object):
+        print("Adding or Updating object---------------------------------------------------")
         session.add(new_or_updated_object)
         session.commit()
         return
