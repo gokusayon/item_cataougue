@@ -36,7 +36,7 @@ def showLogin():
     login_session['state'] = state
     # return "The current session state is %s" %
     # login_session['state']
-    return render_template('login.html', STATE=state)
+    return render_template('login.html',show_welcome="false", STATE=state, isLoggedIn=isLoggedIn())
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -199,17 +199,15 @@ def showCategory(catagory_name):
         userName = ""
         userImage = ""
 
-    return render_template('items.html', categories=categories, catagory_name=catagory_name, catagory_id=catagory_id, items=items, count=count, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
+    return render_template('items.html', categories=categories, show_welcome="true", catagory_name=catagory_name, catagory_id=catagory_id, items=items, count=count, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
 
 # Display a Specific Item
 
 
 @app.route('/catalog/<path:catagory_name>/<path:item_id>/')
 def showItem(catagory_name, item_id):
-    print("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT" + item_id)
     item = itemService.getItemById(item_id)
-    print(item.description)
-    return render_template('item.html', catagory_name=catagory_name, item=item, show_item="true")
+    return render_template('item.html', catagory_name=catagory_name, item=item, show_welcome="false", isLoggedIn=isLoggedIn())
 
 # Add a category
 
@@ -227,7 +225,7 @@ def addCatagory():
         flash('Category Successfully Created!')
         return redirect(url_for('showCatalog'))
     
-    return render_template('addCatagory.html')
+    return render_template('addCatagory.html',show_welcome="false", isLoggedIn=isLoggedIn())
 
 # Edit a category
 
@@ -258,7 +256,7 @@ def editCategory(catagory_name):
 	    	return redirect(url_for('showCatalog'))
 
     return render_template('editcategory.html',
-                           catagory_name=catagory_name)
+                           catagory_name=catagory_name,show_welcome="false", isLoggedIn=isLoggedIn())
     # return
 
 # TODO:Verify removeCategory
@@ -283,7 +281,7 @@ def removeCategory(catagory_name):
         userName = ""
         userImage = ""
 
-    return redirect(url_for('showCatalog'))
+    return redirect(url_for('showCatalog'),show_welcome="true", isLoggedIn=isLoggedIn())
 
 
 # Add an item
@@ -304,10 +302,10 @@ def addItem(catagory_name):
 
         eMS.save(item)
         flash('Category Item Successfully Created!')
-        return redirect(url_for('showCatalog'))
+        return redirect(url_for('showCatalog'), isLoggedIn=isLoggedIn())
     
 
-    return render_template("addItem.html",catagory_name=catagory_name)
+    return render_template("addItem.html",catagory_name=catagory_name, isLoggedIn=isLoggedIn())
 
 # Edit an item
 
@@ -330,7 +328,7 @@ def editItem(catagory_name, item_name):
         user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
         if item.user_id != user.id:
             flash('You do not have access to edit this item! ')
-            return redirect(url_for('showCatalog'))
+            return redirect(url_for('showCatalog'), isLoggedIn=isLoggedIn())
 
         # if request.form['name']:
         print("-----------------Editing item----------------------------------")
@@ -340,10 +338,10 @@ def editItem(catagory_name, item_name):
         eMS.save(item)
         flash('Category Item Successfully Edited!')
 
-        return redirect(url_for('showCatalog'))
+        return redirect(url_for('showCatalog'), isLoggedIn=isLoggedIn())
 
     return render_template('edititem.html',
-                           catagory_name=catagory_name,item=item)
+                           catagory_name=catagory_name,item=item, isLoggedIn=isLoggedIn())
 
 # TODO:Verify removeItem
 # Delete an item
@@ -374,7 +372,7 @@ def showCatalog():
         userName = ""
         userImage = ""
 
-    return render_template('catagories.html', categories=categories, items=items, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
+    return render_template('catagories.html', categories=categories,show_welcome='true', items=items, isLoggedIn=isLoggedIn(), user_name=userName, user_image=userImage)
 
 # @app.route('/catagories/<path:catagoryName>/')
 # def getCatagories():
