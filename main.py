@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from flask import Flask, render_template, jsonify, request, flash, redirect, url_for, make_response
 from database.entityManagerService import EntityManagerService, CatagoryService, ItemService, UserService
 from database.database_set_up import User,Item,Catagory
@@ -7,7 +9,7 @@ import random
 import string
 
 
-# IMPORTS FOR THIS STEP
+# IMPORTS FOR Googel Authentication
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
@@ -16,13 +18,14 @@ import requests
 
 app = Flask(__name__)
 
-
+# Load secret key from file
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Item Cataloge"
 
 app = Flask(__name__)
 
+# Services for CRUD operations
 eMS = EntityManagerService()
 userService = UserService()
 catagoryService = CatagoryService()
@@ -34,10 +37,7 @@ def showLogin():
     state = ''.join(
         random.choice(string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
-    # return "The current session state is %s" %
-    # login_session['state']
     return render_template('login.html',show_welcome="false", STATE=state, isLoggedIn=isLoggedIn())
-
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
@@ -127,6 +127,7 @@ def gconnect():
     # DISCONNECT - Revoke a current user's token and reset their
     # login_session
 
+# Removes the session from cacche
 @app.route('/remove/session')
 def removeLoginSession():
 	del login_session['access_token']
@@ -136,6 +137,7 @@ def removeLoginSession():
 	del login_session['picture']
 	return "Done"
 
+# Logout from google server
 @app.route('/gdisconnect')
 def gdisconnect():
     access_token = login_session.get('access_token')
@@ -181,7 +183,7 @@ def isLoggedIn():
         return True
 
 
-# Category Items
+# Show Category Items
 @app.route('/catalog/<path:catagory_name>/items/')
 def showCategory(catagory_name):
     catagory = catagoryService.getCatagoryByName(catagory_name)
@@ -202,18 +204,13 @@ def showCategory(catagory_name):
     return render_template('items.html', categories=categories, show_welcome="true", catagory_name=catagory_name, catagory_id=catagory_id, items=items, count=count, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
 
 # Display a Specific Item
-
-
 @app.route('/catalog/<path:catagory_name>/<path:item_id>/')
 def showItem(catagory_name, item_id):
     item = itemService.getItemById(item_id)
     return render_template('item.html', catagory_name=catagory_name, item=item, show_welcome="false", isLoggedIn=isLoggedIn())
 
 # Add a category
-
-
 @app.route('/catalog/addcategory', methods=['GET', 'POST'])
-# @login_required
 def addCatagory():    
     if request.method == 'POST' and isLoggedIn():
         user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
@@ -227,12 +224,8 @@ def addCatagory():
     
     return render_template('addCatagory.html',show_welcome="false", isLoggedIn=isLoggedIn())
 
-# Edit a category
-
-
-# TODO : Edit Category not working
+# Edit a category 
 @app.route('/catalog/<path:catagory_name>/edit', methods=['GET', 'POST'])
-# @login_required
 def editCategory(catagory_name):
     print("Catagory Name : ", catagory_name)
     if isLoggedIn():
@@ -257,14 +250,9 @@ def editCategory(catagory_name):
 
     return render_template('editcategory.html',
                            catagory_name=catagory_name,show_welcome="false", isLoggedIn=isLoggedIn())
-    # return
 
-# TODO:Verify removeCategory
 # Delete a category
-
-
 @app.route('/catalog/<path:catagory_name>/delete', methods=['GET', 'POST'])
-# @login_required
 def removeCategory(catagory_name):
     catagory = catagoryService.getCatagoryByName(catagory_name)
     eMS.delete(catagory)
@@ -285,10 +273,7 @@ def removeCategory(catagory_name):
 
 
 # Add an item
-
-
 @app.route('/catalog/<path:catagory_name>/add', methods=['GET','POST'])
-# @login_required
 def addItem(catagory_name):
     if request.method == 'POST' and isLoggedIn():
         catagory = catagoryService.getCatagoryByName(catagory_name)
@@ -308,20 +293,10 @@ def addItem(catagory_name):
     return render_template("addItem.html",catagory_name=catagory_name, isLoggedIn=isLoggedIn())
 
 # Edit an item
-
-
 @app.route('/catalog/<path:catagory_name>/<path:item_name>/edit', methods=['GET', 'POST'])
-# @login_required
 def editItem(catagory_name, item_name):
     catagory = catagoryService.getCatagoryByName(catagory_name)
     item = itemService.getItemByNameAndCatagory(catagory.id, item_name)
-
-    print("Catagory Name : ", catagory_name)
-    if isLoggedIn():
-        print ("True")
-    else:
-        print ("False")
-    
 
     if request.method == 'POST' and isLoggedIn():
         print("Inside First condition")
@@ -330,8 +305,6 @@ def editItem(catagory_name, item_name):
             flash('You do not have access to edit this item! ')
             return redirect(url_for('showCatalog'), isLoggedIn=isLoggedIn())
 
-        # if request.form['name']:
-        print("-----------------Editing item----------------------------------")
         item.name = request.form['name']
         item.description = request.form['description']
         item.image_url = request.form['image_url']
@@ -343,20 +316,15 @@ def editItem(catagory_name, item_name):
     return render_template('edititem.html',
                            catagory_name=catagory_name,item=item, isLoggedIn=isLoggedIn())
 
-# TODO:Verify removeItem
-# Delete an item
-
-
+# Remove Item
 @app.route('/catalog/<path:catagory_name>/<path:item_name>/delete', methods=['GET', 'POST'])
-# @login_required
 def removeItem(catagory_name,item_name):
     catagory = catagoryService.getCatagoryByName(catagory_name)
     item = itemService.getItemByNameAndCatagory(catagory.id, item_name)
-    # item = itemService.deleteItemById(item.id)
     eMS.delete(item)
     return redirect(url_for('showCategory', catagory_name=catagory_name))
 
-
+# Default Mapping
 @app.route('/')
 @app.route('/catalog/')
 def showCatalog():
@@ -374,36 +342,21 @@ def showCatalog():
 
     return render_template('catagories.html', categories=categories,show_welcome='true', items=items, isLoggedIn=isLoggedIn(), user_name=userName, user_image=userImage)
 
-# @app.route('/catagories/<path:catagoryName>/')
-# def getCatagories():
-# 	categories = catagoryService.getCatagoryByName()
-#     category = session.query(Category).filter_by(name=category_name).one()
-#     items = session.query(Items).filter_by(category=category).order_by(asc(Items.name)).all()
-#     print items
-#     count = session.query(Items).filter_by(category=category).count()
-#     creator = getUserInfo(category.user_id)
-#     if 'username' not in login_session or creator.id != login_session['user_id']:
-#         return render_template('public_items.html',category = category.name,categories = categories,items = items,
-#         	count = count)
-#     else:
-#         user = getUserInfo(login_session['user_id'])
-# return render_template('items.html',category =
-# category.name,categories = categories,items = items,unt =
-# count,user=user)
+# JSON endpoints 
 
-
+# to get all users
 @app.route('/json/user')
 def getAllUsers():
     users = userService.getAllUsers()
     return jsonify(users)
 
-
+# to get catagories
 @app.route('/json/catagories')
 def getAllCatagories():
     catagories = catagoryService.getAllCatagories()
     return jsonify(catagories)
 
-
+# to get items
 @app.route('/json/items')
 def getAllItems():
     items = itemService.getAllItems()

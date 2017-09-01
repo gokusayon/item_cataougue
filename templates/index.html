@@ -7,7 +7,6 @@
     <title>{%block title%}{%endblock%}</title>
     <link rel="stylesheet" href="{{url_for('static',filename = 'css/bootstrap.min.css')}}">
     <link rel="stylesheet" href="{{url_for('static',filename = 'css/styles.css')}}">
-    <!-- {%block import%}{%endblock%} -->
 </head>
 
 <body>
@@ -27,9 +26,6 @@
             {% endif %}
         </div>
     </div>
-    <!-- Main Page Content -->
-    <!--  {%block header%}{%endblock%}
-                {%block contents%}{%endblock%} -->
     <section id="catalog" class="section">
         <div class="container">
             {% if isLoggedIn %} {% if show_welcome == 'true' %}
@@ -61,7 +57,6 @@
         </div>
         <!-- /.container -->
     </section>
+    <!-- ./ section -->
 </body>
-<!-- {%block javascript%}{%endblock%} -->
-
 </html>

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from database_set_up import Base, Catagory, Item, User
@@ -18,7 +19,7 @@ session = database_session()
 
 class UserService:
 
-    """docstring for UserService"""
+    """This class is used for CRUD operations for user table"""
 
     def getAllUsers(self):
         userList = session.query(User).all()
@@ -36,7 +37,7 @@ class UserService:
 
 class CatagoryService:
 
-    """docstring for UserService"""
+    """This class is used for CRUD operations for catagory table"""
 
     def getAllCatagories(self):
         catagoryList = session.query(Catagory).all()
@@ -56,7 +57,7 @@ class CatagoryService:
 
 class ItemService:
 
-    """docstring for UserService"""
+    """This class is used for CRUD operations for item table"""
 
     def getAllItems(self):
         itemList = session.query(Item).all()
@@ -90,6 +91,8 @@ class ItemService:
 
 
 class EntityManagerService:
+
+    """This class is used for common CRUD operations"""
 
     def getUserBy(self, userName):
         return session.query(User).filter_by(name=userName).all()
