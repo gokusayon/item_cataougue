@@ -15,21 +15,21 @@
                 <div class="row scroll-style">
                     <span class="col-md-8"><h4>Categories</h4></span> {% if isLoggedIn %}
                     <span class="col-md-4">
-                        <a href="{{url_for('addCatagory')}}" class="pull-right">
+                        <a href="{{url_for('catagory.addCatagory')}}" class="pull-right">
                             Add Catagory
                         </a>
                     </span> {% endif %}
                 </div>
                 <hr> {% for i in categories %}
                 <div class="main_heading">
-                    <a href="{{url_for('showCategory', catagory_name = i.name)}}">
+                    <a href="{{url_for('catagory.showCategory', catagory_name = i.name)}}">
                         <div class="row">
                             <span class="col-md-8"><h4>{{ i.name }}</h4></span> {% if isLoggedIn %}
                             <div class="col-md-4 margin-top-7">
-                                <a href="{{url_for('removeCategory',catagory_name = i.name)}}" class="pull-right">
+                                <a href="{{url_for('catagory.removeCategory',catagory_name = i.name)}}" class="pull-right">
                         Remove
                     </a>
-                                <a href="{{url_for('editCategory',catagory_name = i.name)}}" class="pull-right padding-right-10">
+                                <a href="{{url_for('catagory.editCategory',catagory_name = i.name)}}" class="pull-right padding-right-10">
                         Edit
                     </a>
                             </div>

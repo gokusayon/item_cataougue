@@ -39,7 +39,7 @@ class Catagory(Base):
     name = Column(String(16), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User, backref="catagory")
-    items = relationship("Item", cascade="save-update")
+    items = relationship("Item", cascade="all")
 
     @property
     def serialize(self):
@@ -71,7 +71,7 @@ class Item(Base):
             'name': self.name,
             'image_url': self.image_url,
             'description': self.description,
-            'catagory': self.catagory.serialize,
+            'catagory_id': self.catagory_id,
             'created_by': self.created_by.serialize
         }
 

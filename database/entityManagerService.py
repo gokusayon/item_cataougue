@@ -54,6 +54,9 @@ class CatagoryService:
     def getCatagoriesList(self):
         return session.query(Catagory).order_by(Catagory.name)
 
+    def isPresent(self,catagory_name):
+        return session.query(Catagory).filter_by(name=catagory_name).count() != 0
+
 
 class ItemService:
 
@@ -85,6 +88,9 @@ class ItemService:
     def getItemList(self):
         return session.query(Item).limit(10)
 
+    def isPresent(self,item_name,catagory_id):
+        return session.query(Item).filter_by(name=item_name,catagory_id = catagory_id).count() != 0
+
     def deleteItemById(self, item_id):
         session.query(Item).filter_by(id=item_id).delete()
         session.commit()
@@ -101,7 +107,6 @@ class EntityManagerService:
         return session.query(User).filter_by(id=user_id).one_or_none()
 
     def save(self, new_or_updated_object):
-        print("Adding or Updating object---------------------------------------------------")
         session.add(new_or_updated_object)
         session.commit()
         return

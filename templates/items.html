@@ -3,21 +3,21 @@
 <div class="row">
     <span class="col-md-8"><h4>{{catagory_name}} > Items (<strong>{{count}}</strong>)</h4></span> {% if isLoggedIn %}
     <span class="col-md-4">
-            <a href="{{url_for('addItem', catagory_name = catagory_name)}}" class="pull-right">
+            <a href="{{url_for('item.addItem', catagory_name = catagory_name)}}" class="pull-right">
                 Add Item
             </a>
         </span> {% endif %}
 </div>
 <hr> {% for i in items %}
 <div class="main_heading">
-    <a href="{{url_for('showItem',catagory_name=catagory_name, item_id = i.id)}}">
+    <a href="{{url_for('item.showItem',catagory_name=catagory_name, item_id = i.id)}}">
         <div class="row">
             <span class="col-md-8"><h4>{{ i.name }}</h4></span> {% if isLoggedIn %}
             <div class="col-md-4 margin-top-7">
-                <a href="{{url_for('removeItem',catagory_name = catagory_name,item_name = i.name)}}" class="pull-right">
+                <a href="{{url_for('item.removeItem',catagory_name = catagory_name,item_name = i.name)}}" class="pull-right">
                         Remove
                     </a>
-                <a href="{{url_for('editItem',catagory_name = catagory_name,item_name = i.name)}}" class="pull-right padding-right-10">
+                <a href="{{url_for('item.editItem',catagory_name = catagory_name,item_name = i.name)}}" class="pull-right padding-right-10">
                         Edit
                     </a>
             </div>

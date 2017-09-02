@@ -5,7 +5,7 @@
         <span class="col-md-12"><h4>Add New Item</h4></span>
     </div>
     <hr>
-    <form action="{{url_for('addItem',catagory_name=catagory_name)}}" method="post" class="padding-top-10">
+    <form action="{{url_for('item.addItem',catagory_name=catagory_name)}}" method="post" class="padding-top-10">
         <div class="form-group">
             <label for="name">Name:</label>
             <input type="text" class="form-control" id="name" maxlength="250" name="name">
@@ -20,7 +20,7 @@
         </div>
         <div class="form-group">
             <button type="submit" id="submit" class="btn btn-primary">Save</button>
-            <a href="{{url_for('showCategory', catagory_name=catagory_name)}}">
+            <a href="{{url_for('catagory.showCategory', catagory_name=catagory_name)}}">
                 <button type="button" class="btn btn-danger">Cancel</button>
             </a>
         </div>

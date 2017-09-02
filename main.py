@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 from flask import Flask, render_template, jsonify, request, flash, redirect, url_for, make_response
-from database.entityManagerService import EntityManagerService, CatagoryService, ItemService, UserService
+from database.entityManagerService import UserService,EntityManagerService
 from database.database_set_up import User,Item,Catagory
+from routes.item import item_routes 
+from routes.catagory import catagory_routes
 
 from flask import session as login_session
 import random
@@ -18,18 +20,26 @@ import requests
 
 app = Flask(__name__)
 
+# Moved routes to seprate module
+app.register_blueprint(item_routes)
+app.register_blueprint(catagory_routes)
+
 # Load secret key from file
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Item Cataloge"
 
-app = Flask(__name__)
-
 # Services for CRUD operations
 eMS = EntityManagerService()
 userService = UserService()
-catagoryService = CatagoryService()
-itemService = ItemService()
+
+def isLoggedIn():
+    access_token = login_session.get('access_token')
+    if access_token is None:
+        return False
+    else:
+        return True
+
 
 
 @app.route('/login')
@@ -123,7 +133,7 @@ def gconnect():
     	user = User(name = data["name"],email = data["email"],picture =data["picture"])
     	eMS.save(user)
 
-    flash("you are now logged in as %s" % login_session['username'])
+    flash("You are now logged in as %s" % login_session['username'])
     return "True"
 
     # DISCONNECT - Revoke a current user's token and reset their
@@ -161,223 +171,42 @@ def gdisconnect():
         response = make_response(json.dumps(
             'Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
-        return redirect(url_for('showCatalog'))
+        return redirect(url_for('catagory.showCatalog'))
     else:
         response = make_response(json.dumps(
             'Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
-
-def isLoggedIn():
-    access_token = login_session.get('access_token')
-    if access_token is None:
-        return False
-    else:
-        return True
-
-
-# Show Category Items
-@app.route('/catalog/<path:catagory_name>/items/')
-def showCategory(catagory_name):
-    catagory = catagoryService.getCatagoryByName(catagory_name)
-    catagory_id = catagory.id
-    categories = catagoryService.getCatagoriesList()
-    items = itemService.getItemsForCatagory(catagory.id)
-    count = items.__len__()
-    isUserLoggedIn = isLoggedIn()
-    if isUserLoggedIn == True:
-        userName = login_session['username']
-        userImage = login_session['picture']
-        show_welcome = 'true'
-    else:
-        userName = ""
-        userImage = ""
-        show_welcome='false'
-
-    return render_template('items.html', categories=categories, show_welcome=show_welcome, catagory_name=catagory_name, catagory_id=catagory_id, items=items, count=count, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
-
-# Display a Specific Item
-@app.route('/catalog/<path:catagory_name>/<path:item_id>/')
-def showItem(catagory_name, item_id):
-    item = itemService.getItemById(item_id)
-    return render_template('item.html', catagory_name=catagory_name, item=item, show_welcome="false", isLoggedIn=isLoggedIn())
-
-# Add a category
-@app.route('/catalog/addcategory', methods=['GET', 'POST'])
-def addCatagory():    
-
-    # Validate if current user is logged in
-    if isLoggedIn():
-        if request.method == 'POST':
-            user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-            catagory = Catagory(name=request.form['name'],
-                          user_id=user.id)
-            eMS.save(catagory)
-            flash('Category Successfully Created!')
-            return redirect(url_for('showCatalog'))
-
-        else:
-            return render_template('addCatagory.html',show_welcome="false", isLoggedIn=isLoggedIn())
-
-    else:
-        return render_template('addCatagory.html',show_welcome="false", isLoggedIn=isLoggedIn())
-
-# Edit a category 
-@app.route('/catalog/<path:catagory_name>/edit', methods=['GET', 'POST'])
-def editCategory(catagory_name):
-    
-    catagory = catagoryService.getCatagoryByName(catagory_name)
-    # Validate if current user is logged in
-    if isLoggedIn():
-
-        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-
-        # If user exists and is logged in
-        if bool(user) == True:
-
-            # If catagory is not created by current user then do nothing else proceed to `elif`
-            if catagory.user_id != user.id :
-                flash('You do not have access to edit this item!')
-                return redirect(url_for('showCatalog'))
-
-            elif request.method == 'POST' and bool(request.form['name']):
-    	    	catagory.name = request.form['name']
-    	    	eMS.save(catagory)
-    	    	flash('Category Item Successfully Edited!')
-    	    	return redirect(url_for('showCatalog'))
-
-    # If user not logged in or does not have access to modify template then return editcatagory.html
-    return render_template('editcategory.html',
-                           catagory_name=catagory_name,show_welcome="false", isLoggedIn=isLoggedIn())
-
-# Delete a category
-@app.route('/catalog/<path:catagory_name>/delete', methods=['GET', 'POST'])
-def removeCategory(catagory_name):
-    # Validate if current user is logged in
-    isUserLoggedIn = isLoggedIn()
-
-    # Validate if current user is logged in
-    if isUserLoggedIn:
-        catagory = catagoryService.getCatagoryByName(catagory_name)
-        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-
-        # If catagory is not created by current user then do nothing else proceed to `elif`
-        if catagory.user_id == user.id:
-            catagory = catagoryService.getCatagoryByName(catagory_name)
-            eMS.delete(catagory)
-            flash('Item Deleted Successfully')
-            return redirect(url_for('showCatalog'))
-
-        else:
-            flash('You do not have access to delete this item!' )
-
-    # If user not logged in or does not have access to modify template then render showCatalog
-    return redirect(url_for('showCatalog'))
-
-
-# Add an item
-@app.route('/catalog/<path:catagory_name>/add', methods=['GET','POST'])
-def addItem(catagory_name):
-    # Validate if current user is logged in
-    if isLoggedIn():
-        catagory = catagoryService.getCatagoryByName(catagory_name)
-        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-
-        # Anyone can add item to acatagory but not edit and delete
-        if request.method == 'POST':
-            item = Item(name= request.form['name'],
-               description= request.form['description'],
-               image_url= request.form['image_url'],
-               catagory_id=catagory.id,
-               user_id=user.id)
-            eMS.save(item)
-            flash('Category Item Successfully Created!')
-            return redirect(url_for('showCatalog'))
-
-    return render_template("addItem.html",catagory_name=catagory_name, isLoggedIn=isLoggedIn())
-
-# Edit an item
-@app.route('/catalog/<path:catagory_name>/<path:item_name>/edit', methods=['GET', 'POST'])
-def editItem(catagory_name, item_name):
-    
-    # Validate if current user is logged in
-    if isLoggedIn():
-        catagory = catagoryService.getCatagoryByName(catagory_name)
-        item = itemService.getItemByNameAndCatagory(catagory.id, item_name)
-        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-        
-        # If catagory is not created by current user then do nothing else proceed
-        if item.user_id == user.id and request.method == 'POST':
-            item.name = request.form['name']
-            item.description = request.form['description']
-            item.image_url = request.form['image_url']
-            eMS.save(item)
-            flash('Category Item Successfully Edited!')
-            return redirect(url_for('showCategory', catagory_name=catagory_name,item_id = item.id))
-
-
-        elif item.user_id != user.id :
-            flash('You do not have access to edit this item! ')
-            return redirect(url_for('showCategory', catagory_name=catagory_name,item_id = item.id))
-
-    return render_template('edititem.html',
-                           catagory_name=catagory_name,item=item, isLoggedIn=isLoggedIn())
-
-# Remove Item
-@app.route('/catalog/<path:catagory_name>/<path:item_name>/delete', methods=['GET', 'POST'])
-def removeItem(catagory_name,item_name):
-    
-    # Validate if current user is logged in
-    if isLoggedIn():
-        catagory = catagoryService.getCatagoryByName(catagory_name)
-        item = itemService.getItemByNameAndCatagory(catagory.id, item_name)
-        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-        if item.user_id == user.id:
-            eMS.delete(item)
-            flash('Category Item Successfully Deleted!')
-        else:
-            flash('You do not have access to delete this item! ')
-
-    return redirect(url_for('showCategory', catagory_name=catagory_name))
-        
-
-
-# Default Mapping
-@app.route('/')
-@app.route('/catalog/')
-def showCatalog():
-    categories = catagoryService.getCatagoriesList()
-    items = itemService.getItemList()
-    isUserLoggedIn = isLoggedIn()
-    if isUserLoggedIn == True:
-        userName = login_session['username']
-        userImage = login_session['picture']
-    else:
-        userName = ""
-        userImage = ""
-
-    return render_template('catagories.html', categories=categories,show_welcome='true', items=items, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
-
 # JSON endpoints 
 
+
+def has_no_empty_params(rule):
+    defaults = rule.defaults if rule.defaults is not None else ()
+    arguments = rule.arguments if rule.arguments is not None else ()
+    return len(defaults) >= len(arguments)
+
+# Retuns all the mapped URL's
+@app.route("/site-map")
+def site_map():
+    links = []
+    for rule in app.url_map.iter_rules():
+        # Filter out rules we can't navigate to in a browser
+        # and rules that require parameters
+        if "GET" in rule.methods and has_no_empty_params(rule):
+            url = url_for(rule.endpoint, **(rule.defaults or {}))
+            links.append((url, rule.endpoint))
+
+    return json.dumps(links)
+    # links is now a list of url, endpoint tuples
+
+
 # to get all users
-@app.route('/json/user')
+@app.route('/user.json')
 def getAllUsers():
     users = userService.getAllUsers()
     return jsonify(users)
 
-# to get catagories
-@app.route('/json/catagories')
-def getAllCatagories():
-    catagories = catagoryService.getAllCatagories()
-    return jsonify(catagories)
-
-# to get items
-@app.route('/json/items')
-def getAllItems():
-    items = itemService.getAllItems()
-    return jsonify(items)
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

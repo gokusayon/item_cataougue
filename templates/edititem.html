@@ -2,7 +2,7 @@
 <section id="editItem" class="edit_item">
     <div class="section-content container padding-1-5">
         <h1>Edit Item</h1>
-        <form action="{{url_for('editItem', catagory_name=catagory_name, item_name = item.name)}}" method="post" class="col-md-10 padding-top-10">
+        <form action="{{url_for('item.editItem', catagory_name=catagory_name, item_name = item.name)}}" method="post" class="col-md-10 padding-top-10">
             <div class="form-group">
                 <label for="name">Name:</label>
                 <input type="text" class="form-control" id="name" maxlength="250" name="name" value="{{item.name}}">
@@ -23,7 +23,7 @@
             </div>
             <div class="form-group">
                 <button type="submit" id="submit" class="btn btn-primary">Save</button>
-                <a href="{{url_for('showCategory', catagory_name=catagory_name)}}">
+                <a href="{{url_for('catagory.showCategory', catagory_name=catagory_name)}}">
                     <button type="button" class="btn btn-danger">Cancel</button>
                 </a>
             </div>

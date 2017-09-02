@@ -1,13 +1,13 @@
 {% extends "index.html" %} {% block title %} {{ item.name }}  {% endblock %} {% block content %}
-<div class=" col-md-8">
+<div class=" col-md-12">
     <!-- Page Content -->
     <h4 class="item_heading">{{ item.name }} </h4>
     <hr>
-    <div class="col-md-6">
-        <p>{{ item.description }}</p>
+    <div class="col-md-4 ">
+        <img class="img-responsive img-center pull-right" src="{{ item.image_url }}" alt="{{ item.name }} Image">
     </div>
-    <div class="col-md-4">
-        <img class="img-responsive img-center pull-right" src="{{ item.picture }}" alt="{{ item.name }} Image">
+    <div class="col-md-7 col-md-offset-1">
+        <p>{{ item.description }}</p>
     </div>
 </div>
 {% endblock %}
