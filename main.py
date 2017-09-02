@@ -34,6 +34,9 @@ itemService = ItemService()
 
 @app.route('/login')
 def showLogin():
+
+    """ Creates a session state and renders login.html. """
+    
     state = ''.join(
         random.choice(string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
@@ -41,6 +44,9 @@ def showLogin():
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+
+    """ Gathers data from Google Sign In API and places it inside a session variable. """
+
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps(
@@ -86,7 +92,6 @@ def gconnect():
     if result['issued_to'] != CLIENT_ID:
         response = make_response(
             json.dumps("Token's client ID does not match app's."), 401)
-        print("Token's client ID does not match app's.")
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -106,7 +111,6 @@ def gconnect():
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
     params = {'access_token': credentials.access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
-    print(answer.json)
     data = answer.json()
 
     login_session['username'] = data['name']
@@ -115,9 +119,7 @@ def gconnect():
 
     try:
     	user = userService.getUserByNameAndId(login_session['username'],login_session['email'] )
-    	print("User present in database.")
     except:
-    	print("User not present.Adding to database.")
     	user = User(name = data["name"],email = data["email"],picture =data["picture"])
     	eMS.save(user)
 
@@ -142,20 +144,14 @@ def removeLoginSession():
 def gdisconnect():
     access_token = login_session.get('access_token')
     if access_token is None:
-        print('Access Token is None')
         response = make_response(json.dumps(
             'Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    print('In gdisconnect access token is %s', access_token)
-    print('User name is: ')
-    print(login_session['username'])
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session[
         'access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
-    print('result is ')
-    print(result)
     if result['status'] == '200':
         del login_session['access_token']
         del login_session['gplus_id']
@@ -176,10 +172,8 @@ def gdisconnect():
 def isLoggedIn():
     access_token = login_session.get('access_token')
     if access_token is None:
-        print("true")
         return False
     else:
-        print("false")
         return True
 
 
@@ -193,15 +187,15 @@ def showCategory(catagory_name):
     count = items.__len__()
     isUserLoggedIn = isLoggedIn()
     if isUserLoggedIn == True:
-        print("Inside if")
         userName = login_session['username']
         userImage = login_session['picture']
         show_welcome = 'true'
     else:
         userName = ""
         userImage = ""
+        show_welcome='false'
 
-    return render_template('items.html', categories=categories, show_welcome="true", catagory_name=catagory_name, catagory_id=catagory_id, items=items, count=count, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
+    return render_template('items.html', categories=categories, show_welcome=show_welcome, catagory_name=catagory_name, catagory_id=catagory_id, items=items, count=count, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
 
 # Display a Specific Item
 @app.route('/catalog/<path:catagory_name>/<path:item_id>/')
@@ -212,106 +206,120 @@ def showItem(catagory_name, item_id):
 # Add a category
 @app.route('/catalog/addcategory', methods=['GET', 'POST'])
 def addCatagory():    
-    if request.method == 'POST' and isLoggedIn():
-        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-        
-        catagory = Catagory(name=request.form['name'],
-                      user_id=user.id)
 
-        eMS.save(catagory)
-        flash('Category Successfully Created!')
-        return redirect(url_for('showCatalog'))
-    
-    return render_template('addCatagory.html',show_welcome="false", isLoggedIn=isLoggedIn())
+    # Validate if current user is logged in
+    if isLoggedIn():
+        if request.method == 'POST':
+            user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
+            catagory = Catagory(name=request.form['name'],
+                          user_id=user.id)
+            eMS.save(catagory)
+            flash('Category Successfully Created!')
+            return redirect(url_for('showCatalog'))
+
+        else:
+            return render_template('addCatagory.html',show_welcome="false", isLoggedIn=isLoggedIn())
+
+    else:
+        return render_template('addCatagory.html',show_welcome="false", isLoggedIn=isLoggedIn())
 
 # Edit a category 
 @app.route('/catalog/<path:catagory_name>/edit', methods=['GET', 'POST'])
 def editCategory(catagory_name):
-    print("Catagory Name : ", catagory_name)
-    if isLoggedIn():
-    	print ("True")
-    else:
-    	print ("False")
     
     catagory = catagoryService.getCatagoryByName(catagory_name)
+    # Validate if current user is logged in
+    if isLoggedIn():
 
-    if request.method == 'POST' and isLoggedIn():
-    	print("Inside First condition")
-    	user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-    	if catagory.user_id != user.id:
-            flash('You do not have access to edit this item!' + user.id)
-            return redirect(url_for('showCatalog'))
+        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
 
-    	if request.form['name']:
-	    	catagory.name = request.form['name']
-	    	eMS.save(catagory)
-	    	flash('Category Item Successfully Edited!')
-	    	return redirect(url_for('showCatalog'))
+        # If user exists and is logged in
+        if bool(user) == True:
 
+            # If catagory is not created by current user then do nothing else proceed to `elif`
+            if catagory.user_id != user.id :
+                flash('You do not have access to edit this item!')
+                return redirect(url_for('showCatalog'))
+
+            elif request.method == 'POST' and bool(request.form['name']):
+    	    	catagory.name = request.form['name']
+    	    	eMS.save(catagory)
+    	    	flash('Category Item Successfully Edited!')
+    	    	return redirect(url_for('showCatalog'))
+
+    # If user not logged in or does not have access to modify template then return editcatagory.html
     return render_template('editcategory.html',
                            catagory_name=catagory_name,show_welcome="false", isLoggedIn=isLoggedIn())
 
 # Delete a category
 @app.route('/catalog/<path:catagory_name>/delete', methods=['GET', 'POST'])
 def removeCategory(catagory_name):
-    catagory = catagoryService.getCatagoryByName(catagory_name)
-    eMS.delete(catagory)
-
-    categories = catagoryService.getCatagoriesList()
-    items = itemService.getItemList()
+    # Validate if current user is logged in
     isUserLoggedIn = isLoggedIn()
-    print("Is User Logged in : ", isUserLoggedIn)
-    if isUserLoggedIn == True:
-        print("Inside if")
-        userName = login_session['username']
-        userImage = login_session['picture']
-    else:
-        userName = ""
-        userImage = ""
 
-    return redirect(url_for('showCatalog'),show_welcome="true", isLoggedIn=isLoggedIn())
+    # Validate if current user is logged in
+    if isUserLoggedIn:
+        catagory = catagoryService.getCatagoryByName(catagory_name)
+        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
+
+        # If catagory is not created by current user then do nothing else proceed to `elif`
+        if catagory.user_id == user.id:
+            catagory = catagoryService.getCatagoryByName(catagory_name)
+            eMS.delete(catagory)
+            flash('Item Deleted Successfully')
+            return redirect(url_for('showCatalog'))
+
+        else:
+            flash('You do not have access to delete this item!' )
+
+    # If user not logged in or does not have access to modify template then render showCatalog
+    return redirect(url_for('showCatalog'))
 
 
 # Add an item
 @app.route('/catalog/<path:catagory_name>/add', methods=['GET','POST'])
 def addItem(catagory_name):
-    if request.method == 'POST' and isLoggedIn():
+    # Validate if current user is logged in
+    if isLoggedIn():
         catagory = catagoryService.getCatagoryByName(catagory_name)
         user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-        item = Item(name= request.form['name'],
+
+        # Anyone can add item to acatagory but not edit and delete
+        if request.method == 'POST':
+            item = Item(name= request.form['name'],
                description= request.form['description'],
                image_url= request.form['image_url'],
                catagory_id=catagory.id,
                user_id=user.id)
-        print("Saving Item")
-
-        eMS.save(item)
-        flash('Category Item Successfully Created!')
-        return redirect(url_for('showCatalog'), isLoggedIn=isLoggedIn())
-    
+            eMS.save(item)
+            flash('Category Item Successfully Created!')
+            return redirect(url_for('showCatalog'))
 
     return render_template("addItem.html",catagory_name=catagory_name, isLoggedIn=isLoggedIn())
 
 # Edit an item
 @app.route('/catalog/<path:catagory_name>/<path:item_name>/edit', methods=['GET', 'POST'])
 def editItem(catagory_name, item_name):
-    catagory = catagoryService.getCatagoryByName(catagory_name)
-    item = itemService.getItemByNameAndCatagory(catagory.id, item_name)
-
-    if request.method == 'POST' and isLoggedIn():
-        print("Inside First condition")
+    
+    # Validate if current user is logged in
+    if isLoggedIn():
+        catagory = catagoryService.getCatagoryByName(catagory_name)
+        item = itemService.getItemByNameAndCatagory(catagory.id, item_name)
         user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
-        if item.user_id != user.id:
+        
+        # If catagory is not created by current user then do nothing else proceed
+        if item.user_id == user.id and request.method == 'POST':
+            item.name = request.form['name']
+            item.description = request.form['description']
+            item.image_url = request.form['image_url']
+            eMS.save(item)
+            flash('Category Item Successfully Edited!')
+            return redirect(url_for('showCategory', catagory_name=catagory_name,item_id = item.id))
+
+
+        elif item.user_id != user.id :
             flash('You do not have access to edit this item! ')
-            return redirect(url_for('showCatalog'), isLoggedIn=isLoggedIn())
-
-        item.name = request.form['name']
-        item.description = request.form['description']
-        item.image_url = request.form['image_url']
-        eMS.save(item)
-        flash('Category Item Successfully Edited!')
-
-        return redirect(url_for('showCatalog'), isLoggedIn=isLoggedIn())
+            return redirect(url_for('showCategory', catagory_name=catagory_name,item_id = item.id))
 
     return render_template('edititem.html',
                            catagory_name=catagory_name,item=item, isLoggedIn=isLoggedIn())
@@ -319,10 +327,21 @@ def editItem(catagory_name, item_name):
 # Remove Item
 @app.route('/catalog/<path:catagory_name>/<path:item_name>/delete', methods=['GET', 'POST'])
 def removeItem(catagory_name,item_name):
-    catagory = catagoryService.getCatagoryByName(catagory_name)
-    item = itemService.getItemByNameAndCatagory(catagory.id, item_name)
-    eMS.delete(item)
+    
+    # Validate if current user is logged in
+    if isLoggedIn():
+        catagory = catagoryService.getCatagoryByName(catagory_name)
+        item = itemService.getItemByNameAndCatagory(catagory.id, item_name)
+        user = userService.getUserByNameAndId(login_session['username'],login_session['email'])
+        if item.user_id == user.id:
+            eMS.delete(item)
+            flash('Category Item Successfully Deleted!')
+        else:
+            flash('You do not have access to delete this item! ')
+
     return redirect(url_for('showCategory', catagory_name=catagory_name))
+        
+
 
 # Default Mapping
 @app.route('/')
@@ -331,16 +350,14 @@ def showCatalog():
     categories = catagoryService.getCatagoriesList()
     items = itemService.getItemList()
     isUserLoggedIn = isLoggedIn()
-    print("Is User Logged in : ", isUserLoggedIn)
     if isUserLoggedIn == True:
-        print("Inside if")
         userName = login_session['username']
         userImage = login_session['picture']
     else:
         userName = ""
         userImage = ""
 
-    return render_template('catagories.html', categories=categories,show_welcome='true', items=items, isLoggedIn=isLoggedIn(), user_name=userName, user_image=userImage)
+    return render_template('catagories.html', categories=categories,show_welcome='true', items=items, isLoggedIn=isUserLoggedIn, user_name=userName, user_image=userImage)
 
 # JSON endpoints 
 

@@ -7,8 +7,8 @@ from database_set_up import Base, Catagory, Item, User
 
 import logging
 
-# logging.basicConfig()
-# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 engine = \
     create_engine('mysql+pymysql://root:root@localhost/item_catalog')
@@ -46,10 +46,10 @@ class CatagoryService:
         return serializedCatagoryList
 
     def getCatagoryById(self, catagory_id):
-        return session.query(Catagory).filter_by(id=catagory_id).one()
+        return session.query(Catagory).filter_by(id=catagory_id).one_or_none()
 
     def getCatagoryByName(self, catagory_name):
-        return session.query(Catagory).filter_by(name=catagory_name).one()
+        return session.query(Catagory).filter_by(name=catagory_name).one_or_none()
 
     def getCatagoriesList(self):
         return session.query(Catagory).order_by(Catagory.name)
@@ -65,19 +65,19 @@ class ItemService:
         return serializedItemList
 
     def getJson(self, item_id):
-        item = session.query(Item).filter_by(id=item_id).one()
+        item = session.query(Item).filter_by(id=item_id).one_or_none()
         serializedItem = item.serialize
         return serializedItem
 
     def getItemById(self, item_id):
-        return session.query(Item).filter_by(id=item_id).one()
+        return session.query(Item).filter_by(id=item_id).one_or_none()
 
     def getItemByName(self, item_name):
-        return session.query(Item).filter_by(name=item_name).one()
+        return session.query(Item).filter_by(name=item_name).one_or_none()
 
     def getItemByNameAndCatagory(self, catagory_id, item_name):
         return session.query(Item).filter_by(catagory_id=catagory_id,
-                                             name=item_name).one()
+                                             name=item_name).one_or_none()
 
     def getItemsForCatagory(self, catagory_id):
         return session.query(Item).filter_by(catagory_id=catagory_id).all()
@@ -98,7 +98,7 @@ class EntityManagerService:
         return session.query(User).filter_by(name=userName).all()
 
     def getUserById(self, user_id):
-        return session.query(User).filter_by(id=user_id).one()
+        return session.query(User).filter_by(id=user_id).one_or_none()
 
     def save(self, new_or_updated_object):
         print("Adding or Updating object---------------------------------------------------")
